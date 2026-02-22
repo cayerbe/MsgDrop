@@ -521,7 +521,41 @@
       transition: width 0.3s;
     }
 
-    .read-footer {
+    .read-likes {
+    padding: 16px 28px; border-top: 1px solid var(--surface2);
+    display: flex; align-items: center; gap: 14px;
+  }
+  .btn-like {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface2); color: var(--text2);
+    border: none; border-radius: 50px;
+    padding: 10px 20px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s;
+    font-family: 'DM Sans', sans-serif;
+    user-select: none;
+  }
+  .btn-like:hover { transform: translateY(-1px); }
+  .btn-like.liked {
+    background: #fecdd3; color: #e11d48;
+  }
+  [data-theme="dark"] .btn-like.liked {
+    background: rgba(225, 29, 72, 0.15); color: #fb7185;
+  }
+  .btn-like .heart {
+    display: inline-block; font-size: 18px;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  .btn-like.liked .heart { transform: scale(1.3); }
+  .like-count {
+    font-size: 14px; color: var(--text2); font-weight: 500;
+  }
+  @keyframes heartPop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.5); }
+    100% { transform: scale(1.3); }
+  }
+  .heart-pop .heart { animation: heartPop 0.4s ease; }
+  .read-footer {
       padding: 20px 28px;
       border-top: 1px solid var(--surface2);
       text-align: center;
@@ -588,13 +622,13 @@
           <span class="toggle-icons"><span>🌙</span><span>☀️</span></span>
         </button>
       </div>
-      <div class="tagline">Write a long message. Share a short link. No server, no signup.</div>
+      <div class="tagline">Write or paste a long message. Share a short link with voice in 27+ languages.</div>
       <div class="field-label">Title</div>
       <input type="text" class="title-input" id="msgTitle" placeholder="e.g. Meeting notes for Monday">
       <div class="field-label" style="margin-top:20px">Message</div>
-      <textarea id="msgBody" placeholder="Write your full message here...
+      <textarea id="msgBody" placeholder="Write or paste your message here...
 
-Supports **bold** text and line breaks."></textarea>
+Supports **bold** text and line breaks. Your reader gets automatic voice playback in 27+ languages."></textarea>
       <div class="char-count"><span id="charCount">0</span> chars</div>
       <button class="btn" id="generateBtn" onclick="generate()">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -652,6 +686,12 @@ Supports **bold** text and line breaks."></textarea>
             <div class="tts-progress-bar" id="ttsBar"></div>
           </div>
           <button class="tts-speed" id="speedBtn" onclick="cycleSpeed()">1×</button>
+        </div>
+        <div class="read-likes">
+          <button class="btn-like" id="likeBtn" onclick="toggleLike()">
+            <span class="heart" id="likeHeart">🤍</span> <span id="likeLabel">Like</span>
+          </button>
+          <span class="like-count" id="likeCount"></span>
         </div>
         <div class="read-footer">Shared via <a onclick="goCompose()">MsgDrop</a> — send long messages as links</div>
       </div>
@@ -795,24 +835,23 @@ Supports **bold** text and line breaks."></textarea>
 
     function detectLanguage(text) {
       var s = text.substring(0, 1200).toLowerCase();
-      // Normalize: replace curly quotes/apostrophes with spaces, strip punctuation, pad with spaces
-      s = ' ' + s.replace(/['']/g, ' ').replace(/[^a-z\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\u0370-\u03FF\u0590-\u05FF\s]/g, ' ').replace(/\s+/g, ' ') + ' ';
+      s = ' ' + s.replace(/[\u2018\u2019']/g, ' ').replace(/[^a-z\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\u0370-\u03FF\u0590-\u05FF\s]/g, ' ').replace(/\s+/g, ' ') + ' ';
 
       var patterns = [
-        ['it-IT', / (che |il |la |lo |le |gli |del |dei |della |delle |con |una |uno |sono |come |per |non |più |questo |quello |già |anche |essere |hanno |stato |tutto |fare |dopo |ancora |suo |sua |ogni |alla |alle |nel |nei |nella |molto |quando |dove |può |tra |fra |perché |senza |loro |questa |questi |quale |quali )/g],
-        ['es-ES', / (que |el |la |los |las |del |una |con |para |por |como |pero |más |también |puede |tiene |esto |sobre |cuando |todos |entre |porque |desde |donde |antes |después |cada |muy |otro |sin |todo |esta |este |ese )/g],
-        ['pt-BR', / (que |para |como |uma |com |por |mais |não |ele |ela |isso |também |pode |muito |ainda |aqui |foram |fazer |quando |cada |outro |todo |essa |esse |seu |sua )/g],
-        ['fr-FR', / (que |est |pour |les |des |une |avec |dans |cette |sont |nous |vous |mais |tout |plus |leur |fait |même |aussi |qui |par |sur |pas |ont |elle |ces |aux )/g],
-        ['de-DE', / (und |der |die |das |ist |für |mit |auf |ein |eine |nicht |sich |auch |wird |oder |nach |noch |bei |kann |aber |wenn |den |dem |des |von |aus |nur |wie |hat |sind )/g],
+        ['it-IT', / (che |il |la |lo |le |gli |del |dei |della |delle |con |una |uno |sono |come |per |non |questo |quello |anche |essere |hanno |stato |tutto |fare |dopo |ancora |suo |sua |ogni |alla |alle |nel |nei |nella |molto |quando |dove |tra |fra |senza |loro |questa |questi |quale |quali )/g],
+        ['es-ES', / (que |el |la |los |las |del |una |con |para |por |como |pero |puede |tiene |esto |sobre |cuando |todos |entre |porque |desde |donde |antes |cada |muy |otro |sin |todo |esta |este |ese )/g],
+        ['pt-BR', / (que |para |como |uma |com |por |mais |ele |ela |isso |pode |muito |ainda |aqui |foram |fazer |quando |cada |outro |todo |essa |esse |seu |sua )/g],
+        ['fr-FR', / (que |est |pour |les |des |une |avec |dans |cette |sont |nous |vous |mais |tout |plus |leur |fait |aussi |qui |par |sur |pas |ont |elle |ces |aux )/g],
+        ['de-DE', / (und |der |die |das |ist |mit |auf |ein |eine |nicht |sich |auch |wird |oder |nach |noch |bei |kann |aber |wenn |den |dem |des |von |aus |nur |wie |hat |sind )/g],
         ['nl-NL', / (het |een |van |dat |die |niet |zijn |voor |met |ook |maar |deze |werd |nog |wel |naar |zij |wat |bij |uit )/g],
-        ['pl-PL', / (jest |nie |jak |ale |czy |tego |tak |tylko |może |bardzo |przez |przed |jeszcze )/g],
-        ['ru-RU', /[а-яё]{3,}/g],
-        ['uk-UA', / (що |як |але |від |або |для |його |вона |цей |після |були |може |також |якщо )/g],
+        ['pl-PL', / (jest |nie |jak |ale |czy |tego |tak |tylko |bardzo |przez |przed |jeszcze )/g],
+        ['ru-RU', /[\u0430-\u044f\u0451]{3,}/g],
+        ['uk-UA', / (що |як |але |або |для |його |вона |цей |були |може |також )/g],
         ['ko-KR', /[\uac00-\ud7af]/g],
         ['ar-SA', /[\u0600-\u06ff]/g],
         ['hi-IN', /[\u0900-\u097f]/g],
         ['th-TH', /[\u0e00-\u0e7f]/g],
-        ['vi-VN', /[àáảãạăắằẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/g],
+        ['vi-VN', /[\u00e0\u00e1\u1ea3\u00e3\u1ea1\u0103\u1eaf\u1eb1\u1eb5\u1eb7\u00e2\u1ea5\u1ea7\u1ea9\u1eab\u1ead\u00e8\u00e9\u1ebb\u1ebd\u1eb9\u00ea\u1ebf\u1ec1\u1ec3\u1ec5\u1ec7\u00ec\u00ed\u1ec9\u0129\u1ecb\u00f2\u00f3\u1ecf\u00f5\u1ecd\u00f4\u1ed1\u1ed3\u1ed5\u1ed7\u1ed9\u01a1\u1edb\u1edd\u1edf\u1ee1\u1ee3\u00f9\u00fa\u1ee7\u0169\u1ee5\u01b0\u1ee9\u1eeb\u1eed\u1eef\u1ef1\u1ef3\u00fd\u1ef7\u1ef9\u1ef5\u0111]/g],
         ['tr-TR', / (bir |bu |ile |olan |gibi |daha |sonra |kadar |olarak |ancak |ise |veya )/g],
         ['sv-SE', / (och |det |att |som |med |den |inte |har |var |kan |till |utan |efter |alla |mycket )/g],
         ['da-DK', / (og |det |at |som |for |med |den |ikke |har |var |fra |kan |til |efter |alle |meget )/g],
@@ -869,10 +908,8 @@ Supports **bold** text and line breaks."></textarea>
       });
 
       if (langVoices.length > 0) {
-        // Prefer neural/natural/enhanced voices
         var neural = langVoices.find(function (v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
         if (neural) return neural;
-        // Prefer non-compact voices
         var quality = langVoices.find(function (v) { return !/compact/i.test(v.name); });
         if (quality) return quality;
         return langVoices[0];
@@ -1024,13 +1061,139 @@ Supports **bold** text and line breaks."></textarea>
       speechSynthesis.onvoiceschanged = function () { speechSynthesis.getVoices(); };
     }
 
-    // ─── Read Mode ──────────────────────────────────────
+    // ─── Likes ──────────────────────────────────────────
+// Optional: configure Supabase for shared like counts
+// Create a table: CREATE TABLE likes (msg_hash TEXT PRIMARY KEY, count INTEGER DEFAULT 0);
+// Enable RLS with: allow SELECT and UPDATE for anon role
+var SUPABASE_URL = ''; // e.g. 'https://xxxxx.supabase.co'
+var SUPABASE_KEY = ''; // anon/public key
+
+var currentMsgHash = '';
+
+function hashMessage(str) {
+  // Simple hash for message ID
+  var hash = 0;
+  for (var i = 0; i < str.length; i++) {
+    var c = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + c;
+    hash |= 0;
+  }
+  return 'msg_' + Math.abs(hash).toString(36);
+}
+
+function isLikedLocally(hash) {
+  try { return localStorage.getItem('like_' + hash) === '1'; } catch(e) { return false; }
+}
+
+function setLikedLocally(hash, liked) {
+  try { localStorage.setItem('like_' + hash, liked ? '1' : '0'); } catch(e) {}
+}
+
+async function fetchLikeCount(hash) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
+  try {
+    var res = await fetch(SUPABASE_URL + '/rest/v1/likes?msg_hash=eq.' + hash, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    var data = await res.json();
+    return (data && data[0]) ? data[0].count : 0;
+  } catch(e) { return null; }
+}
+
+async function updateLikeCount(hash, delta) {
+  if (!SUPABASE_URL || !SUPABASE_KEY) return;
+  try {
+    // Try to upsert
+    var current = await fetchLikeCount(hash);
+    if (current === null) return;
+    var newCount = Math.max(0, (current || 0) + delta);
+    await fetch(SUPABASE_URL + '/rest/v1/likes', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ msg_hash: hash, count: newCount })
+    });
+  } catch(e) {}
+}
+
+async function toggleLike() {
+  if (!currentMsgHash) return;
+  var liked = isLikedLocally(currentMsgHash);
+  var btn = document.getElementById('likeBtn');
+  var heart = document.getElementById('likeHeart');
+  var label = document.getElementById('likeLabel');
+
+  if (liked) {
+    // Unlike
+    setLikedLocally(currentMsgHash, false);
+    btn.classList.remove('liked', 'heart-pop');
+    heart.textContent = '\uD83E\uDD0D'; // 🤍
+    label.textContent = 'Like';
+    updateLikeCount(currentMsgHash, -1);
+    updateLikeDisplay(-1);
+  } else {
+    // Like
+    setLikedLocally(currentMsgHash, true);
+    btn.classList.remove('heart-pop');
+    void btn.offsetWidth; // force reflow for animation
+    btn.classList.add('liked', 'heart-pop');
+    heart.textContent = '\u2764\uFE0F'; // ❤️
+    label.textContent = 'Liked';
+    updateLikeCount(currentMsgHash, 1);
+    updateLikeDisplay(1);
+  }
+}
+
+var displayedCount = 0;
+
+function updateLikeDisplay(delta) {
+  displayedCount = Math.max(0, displayedCount + (delta || 0));
+  var el = document.getElementById('likeCount');
+  if (displayedCount > 0) {
+    el.textContent = displayedCount + (displayedCount === 1 ? ' like' : ' likes');
+  } else {
+    el.textContent = '';
+  }
+}
+
+async function initLikes(msgText) {
+  currentMsgHash = hashMessage(msgText);
+  var liked = isLikedLocally(currentMsgHash);
+  var btn = document.getElementById('likeBtn');
+  var heart = document.getElementById('likeHeart');
+  var label = document.getElementById('likeLabel');
+
+  if (liked) {
+    btn.classList.add('liked');
+    heart.textContent = '\u2764\uFE0F';
+    label.textContent = 'Liked';
+  }
+
+  // Fetch shared count
+  var count = await fetchLikeCount(currentMsgHash);
+  if (count !== null) {
+    displayedCount = count;
+  } else {
+    // No backend: just show 1 if user liked it
+    displayedCount = liked ? 1 : 0;
+  }
+  updateLikeDisplay(0);
+}
+
+// ─── Read Mode ──────────────────────────────────────
     function showRead(data) {
       document.getElementById('composeView').style.display = 'none';
       document.getElementById('readView').style.display = 'block';
       document.getElementById('readTitle').textContent = data.t;
       document.getElementById('readBody').innerHTML = renderText(data.b);
       ttsText = data.b.replace(/\*\*/g, '');
+
+      // Init like button
+      initLikes(data.t + data.b);
 
       if (data.d) {
         var date = new Date(data.d);
