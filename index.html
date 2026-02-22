@@ -467,9 +467,30 @@ function getBestVoice(lang) {
   var voices = speechSynthesis.getVoices();
   if (!voices.length) return null;
   var prefix = lang.substring(0, 2);
+
+  // Get all voices matching the target language
   var langVoices = voices.filter(function(v) { return v.lang.startsWith(prefix); });
-  var neural = langVoices.find(function(v) { return /natural|neural|online|enhanced/i.test(v.name); });
-  return neural || langVoices[0] || voices[0];
+
+  if (langVoices.length > 0) {
+    // Prefer neural/natural/enhanced voices
+    var neural = langVoices.find(function(v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
+    if (neural) return neural;
+    // Prefer non-compact voices
+    var quality = langVoices.find(function(v) { return !/compact/i.test(v.name); });
+    if (quality) return quality;
+    return langVoices[0];
+  }
+
+  // Fallback: try English, never return a random voice
+  if (prefix !== 'en') {
+    var enVoices = voices.filter(function(v) { return v.lang.startsWith('en'); });
+    if (enVoices.length > 0) {
+      var enNeural = enVoices.find(function(v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
+      return enNeural || enVoices[0];
+    }
+  }
+
+  return null;
 }
 
 function toggleTTS() {
@@ -482,14 +503,35 @@ function toggleTTS() {
 
   if (!ttsText) return;
 
+  // Ensure voices are loaded before speaking
+  var voices = speechSynthesis.getVoices();
+  if (!voices.length) {
+    // Voices not loaded yet — wait and retry
+    speechSynthesis.onvoiceschanged = function() {
+      speechSynthesis.onvoiceschanged = null;
+      startSpeaking();
+    };
+    // Also try after a short delay as fallback
+    setTimeout(function() { if (!ttsPlaying) startSpeaking(); }, 300);
+    return;
+  }
+
+  startSpeaking();
+}
+
+function startSpeaking() {
   speechSynthesis.cancel();
-  var utterance = new SpeechSynthesisUtterance(ttsText);
   var lang = detectLanguage(ttsText);
+
+  var utterance = new SpeechSynthesisUtterance(ttsText);
   utterance.lang = lang;
   utterance.rate = ttsSpeed;
 
   var voice = getBestVoice(lang);
-  if (voice) utterance.voice = voice;
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang; // Ensure lang matches the actual voice
+  }
 
   var words = ttsText.split(/\s+/).length;
   var estimatedDuration = (words / 150) * 60 / ttsSpeed;
