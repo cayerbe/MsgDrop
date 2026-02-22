@@ -522,40 +522,71 @@
     }
 
     .read-likes {
-    padding: 16px 28px; border-top: 1px solid var(--surface2);
-    display: flex; align-items: center; gap: 14px;
-  }
-  .btn-like {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: var(--surface2); color: var(--text2);
-    border: none; border-radius: 50px;
-    padding: 10px 20px; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: transform 0.15s, background 0.2s, color 0.2s;
-    font-family: 'DM Sans', sans-serif;
-    user-select: none;
-  }
-  .btn-like:hover { transform: translateY(-1px); }
-  .btn-like.liked {
-    background: #fecdd3; color: #e11d48;
-  }
-  [data-theme="dark"] .btn-like.liked {
-    background: rgba(225, 29, 72, 0.15); color: #fb7185;
-  }
-  .btn-like .heart {
-    display: inline-block; font-size: 18px;
-    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  }
-  .btn-like.liked .heart { transform: scale(1.3); }
-  .like-count {
-    font-size: 14px; color: var(--text2); font-weight: 500;
-  }
-  @keyframes heartPop {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.5); }
-    100% { transform: scale(1.3); }
-  }
-  .heart-pop .heart { animation: heartPop 0.4s ease; }
-  .read-footer {
+      padding: 16px 28px;
+      border-top: 1px solid var(--surface2);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-like {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface2);
+      color: var(--text2);
+      border: none;
+      border-radius: 50px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.15s, background 0.2s, color 0.2s;
+      font-family: 'DM Sans', sans-serif;
+      user-select: none;
+    }
+
+    .btn-like:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-like.liked {
+      background: #fecdd3;
+      color: #e11d48;
+    }
+
+    [data-theme="dark"] .btn-like.liked {
+      background: rgba(225, 29, 72, 0.15);
+      color: #fb7185;
+    }
+
+    .btn-like .heart {
+      display: inline-block;
+      font-size: 18px;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .btn-like.liked .heart {
+      transform: scale(1.3);
+    }
+
+    .like-count {
+      font-size: 14px;
+      color: var(--text2);
+      font-weight: 500;
+    }
+
+    @keyframes heartPop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.5); }
+      100% { transform: scale(1.3); }
+    }
+
+    .heart-pop .heart {
+      animation: heartPop 0.4s ease;
+    }
+
+    .read-footer {
       padding: 20px 28px;
       border-top: 1px solid var(--surface2);
       text-align: center;
@@ -591,6 +622,10 @@
       }
 
       .read-player {
+        padding: 14px 20px;
+      }
+
+      .read-likes {
         padding: 14px 20px;
       }
 
@@ -901,7 +936,6 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       if (!voices.length) return null;
       var prefix = lang.substring(0, 2).toLowerCase();
 
-      // Match voices flexibly: handle it-IT, it_IT, it formats
       var langVoices = voices.filter(function (v) {
         var vl = (v.lang || '').replace('_', '-').toLowerCase();
         return vl === lang.toLowerCase() || vl.startsWith(prefix + '-') || vl === prefix;
@@ -915,7 +949,6 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
         return langVoices[0];
       }
 
-      // Fallback: try English, never return a random voice
       if (prefix !== 'en') {
         var enVoices = voices.filter(function (v) {
           var vl = (v.lang || '').replace('_', '-').toLowerCase();
@@ -940,33 +973,20 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
 
       if (!ttsText) return;
 
-      // Ensure voices are loaded before speaking
       var voices = speechSynthesis.getVoices();
       if (!voices.length) {
-        // Voices not loaded yet — wait for the event (no blind timeout)
-        console.log('[TTS] Voices not loaded yet, waiting for onvoiceschanged...');
+        console.log('[TTS] Voices not loaded yet, waiting...');
         speechSynthesis.onvoiceschanged = function () {
           speechSynthesis.onvoiceschanged = null;
           var v = speechSynthesis.getVoices();
-          console.log('[TTS] Voices loaded:', v.length, 'voices available');
-          if (v.length) {
-            startSpeaking();
-          } else {
-            console.warn('[TTS] No voices available after onvoiceschanged');
-          }
+          console.log('[TTS] Voices loaded:', v.length);
+          if (v.length) startSpeaking();
         };
-        // Safety timeout: notify if voices never load (no blind speak)
         setTimeout(function () {
           if (!ttsPlaying && speechSynthesis.onvoiceschanged) {
             speechSynthesis.onvoiceschanged = null;
-            // One last attempt — some browsers load voices lazily
             var lastTry = speechSynthesis.getVoices();
-            if (lastTry.length) {
-              console.log('[TTS] Voices loaded on safety timeout:', lastTry.length);
-              startSpeaking();
-            } else {
-              console.warn('[TTS] Voices failed to load after 3s timeout');
-            }
+            if (lastTry.length) startSpeaking();
           }
         }, 3000);
         return;
@@ -986,10 +1006,8 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       var voice = getBestVoice(lang);
       if (voice) {
         utterance.voice = voice;
-        utterance.lang = voice.lang; // Ensure lang matches the actual voice
+        utterance.lang = voice.lang;
         console.log('[TTS] Using voice:', voice.name, '(' + voice.lang + ')');
-      } else {
-        console.warn('[TTS] No matching voice found for lang:', lang, '— browser will use default');
       }
 
       var words = ttsText.split(/\s+/).length;
@@ -1056,135 +1074,115 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       }
     }
 
-    // Preload voices
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = function () { speechSynthesis.getVoices(); };
     }
 
     // ─── Likes ──────────────────────────────────────────
-// Optional: configure Supabase for shared like counts
-// Create a table: CREATE TABLE likes (msg_hash TEXT PRIMARY KEY, count INTEGER DEFAULT 0);
-// Enable RLS with: allow SELECT and UPDATE for anon role
-var SUPABASE_URL = ''; // e.g. 'https://xxxxx.supabase.co'
-var SUPABASE_KEY = ''; // anon/public key
+    // Railway API for shared like counts
+    var LIKES_API = 'https://msgdrop-production.up.railway.app';
 
-var currentMsgHash = '';
+    var currentMsgHash = '';
 
-function hashMessage(str) {
-  // Simple hash for message ID
-  var hash = 0;
-  for (var i = 0; i < str.length; i++) {
-    var c = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + c;
-    hash |= 0;
-  }
-  return 'msg_' + Math.abs(hash).toString(36);
-}
+    function hashMessage(str) {
+      var hash = 0;
+      for (var i = 0; i < str.length; i++) {
+        var c = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + c;
+        hash |= 0;
+      }
+      return 'msg_' + Math.abs(hash).toString(36);
+    }
 
-function isLikedLocally(hash) {
-  try { return localStorage.getItem('like_' + hash) === '1'; } catch(e) { return false; }
-}
+    function isLikedLocally(hash) {
+      try { return localStorage.getItem('like_' + hash) === '1'; } catch (e) { return false; }
+    }
 
-function setLikedLocally(hash, liked) {
-  try { localStorage.setItem('like_' + hash, liked ? '1' : '0'); } catch(e) {}
-}
+    function setLikedLocally(hash, liked) {
+      try { localStorage.setItem('like_' + hash, liked ? '1' : '0'); } catch (e) { }
+    }
 
-async function fetchLikeCount(hash) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return null;
-  try {
-    var res = await fetch(SUPABASE_URL + '/rest/v1/likes?msg_hash=eq.' + hash, {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    var data = await res.json();
-    return (data && data[0]) ? data[0].count : 0;
-  } catch(e) { return null; }
-}
+    async function fetchLikeCount(hash) {
+      if (!LIKES_API) return null;
+      try {
+        var res = await fetch(LIKES_API + '/likes/' + hash);
+        var data = await res.json();
+        return data.count || 0;
+      } catch (e) { return null; }
+    }
 
-async function updateLikeCount(hash, delta) {
-  if (!SUPABASE_URL || !SUPABASE_KEY) return;
-  try {
-    // Try to upsert
-    var current = await fetchLikeCount(hash);
-    if (current === null) return;
-    var newCount = Math.max(0, (current || 0) + delta);
-    await fetch(SUPABASE_URL + '/rest/v1/likes', {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY,
-        'Content-Type': 'application/json',
-        'Prefer': 'resolution=merge-duplicates'
-      },
-      body: JSON.stringify({ msg_hash: hash, count: newCount })
-    });
-  } catch(e) {}
-}
+    async function sendLikeDelta(hash, delta) {
+      if (!LIKES_API) return;
+      try {
+        await fetch(LIKES_API + '/likes/' + hash, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ delta: delta })
+        });
+      } catch (e) { }
+    }
 
-async function toggleLike() {
-  if (!currentMsgHash) return;
-  var liked = isLikedLocally(currentMsgHash);
-  var btn = document.getElementById('likeBtn');
-  var heart = document.getElementById('likeHeart');
-  var label = document.getElementById('likeLabel');
+    async function toggleLike() {
+      if (!currentMsgHash) return;
+      var liked = isLikedLocally(currentMsgHash);
+      var btn = document.getElementById('likeBtn');
+      var heart = document.getElementById('likeHeart');
+      var label = document.getElementById('likeLabel');
 
-  if (liked) {
-    // Unlike
-    setLikedLocally(currentMsgHash, false);
-    btn.classList.remove('liked', 'heart-pop');
-    heart.textContent = '\uD83E\uDD0D'; // 🤍
-    label.textContent = 'Like';
-    updateLikeCount(currentMsgHash, -1);
-    updateLikeDisplay(-1);
-  } else {
-    // Like
-    setLikedLocally(currentMsgHash, true);
-    btn.classList.remove('heart-pop');
-    void btn.offsetWidth; // force reflow for animation
-    btn.classList.add('liked', 'heart-pop');
-    heart.textContent = '\u2764\uFE0F'; // ❤️
-    label.textContent = 'Liked';
-    updateLikeCount(currentMsgHash, 1);
-    updateLikeDisplay(1);
-  }
-}
+      if (liked) {
+        setLikedLocally(currentMsgHash, false);
+        btn.classList.remove('liked', 'heart-pop');
+        heart.textContent = '\uD83E\uDD0D';
+        label.textContent = 'Like';
+        sendLikeDelta(currentMsgHash, -1);
+        updateLikeDisplay(-1);
+      } else {
+        setLikedLocally(currentMsgHash, true);
+        btn.classList.remove('heart-pop');
+        void btn.offsetWidth;
+        btn.classList.add('liked', 'heart-pop');
+        heart.textContent = '\u2764\uFE0F';
+        label.textContent = 'Liked';
+        sendLikeDelta(currentMsgHash, 1);
+        updateLikeDisplay(1);
+      }
+    }
 
-var displayedCount = 0;
+    var displayedCount = 0;
 
-function updateLikeDisplay(delta) {
-  displayedCount = Math.max(0, displayedCount + (delta || 0));
-  var el = document.getElementById('likeCount');
-  if (displayedCount > 0) {
-    el.textContent = displayedCount + (displayedCount === 1 ? ' like' : ' likes');
-  } else {
-    el.textContent = '';
-  }
-}
+    function updateLikeDisplay(delta) {
+      displayedCount = Math.max(0, displayedCount + (delta || 0));
+      var el = document.getElementById('likeCount');
+      if (displayedCount > 0) {
+        el.textContent = displayedCount + (displayedCount === 1 ? ' like' : ' likes');
+      } else {
+        el.textContent = '';
+      }
+    }
 
-async function initLikes(msgText) {
-  currentMsgHash = hashMessage(msgText);
-  var liked = isLikedLocally(currentMsgHash);
-  var btn = document.getElementById('likeBtn');
-  var heart = document.getElementById('likeHeart');
-  var label = document.getElementById('likeLabel');
+    async function initLikes(msgText) {
+      currentMsgHash = hashMessage(msgText);
+      var liked = isLikedLocally(currentMsgHash);
+      var btn = document.getElementById('likeBtn');
+      var heart = document.getElementById('likeHeart');
+      var label = document.getElementById('likeLabel');
 
-  if (liked) {
-    btn.classList.add('liked');
-    heart.textContent = '\u2764\uFE0F';
-    label.textContent = 'Liked';
-  }
+      if (liked) {
+        btn.classList.add('liked');
+        heart.textContent = '\u2764\uFE0F';
+        label.textContent = 'Liked';
+      }
 
-  // Fetch shared count
-  var count = await fetchLikeCount(currentMsgHash);
-  if (count !== null) {
-    displayedCount = count;
-  } else {
-    // No backend: just show 1 if user liked it
-    displayedCount = liked ? 1 : 0;
-  }
-  updateLikeDisplay(0);
-}
+      var count = await fetchLikeCount(currentMsgHash);
+      if (count !== null) {
+        displayedCount = count;
+      } else {
+        displayedCount = liked ? 1 : 0;
+      }
+      updateLikeDisplay(0);
+    }
 
-// ─── Read Mode ──────────────────────────────────────
+    // ─── Read Mode ──────────────────────────────────────
     function showRead(data) {
       document.getElementById('composeView').style.display = 'none';
       document.getElementById('readView').style.display = 'block';
@@ -1192,7 +1190,6 @@ async function initLikes(msgText) {
       document.getElementById('readBody').innerHTML = renderText(data.b);
       ttsText = data.b.replace(/\*\*/g, '');
 
-      // Init like button
       initLikes(data.t + data.b);
 
       if (data.d) {
