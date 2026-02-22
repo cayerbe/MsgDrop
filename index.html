@@ -202,6 +202,36 @@
   .read-meta { font-size: 13px; color: var(--text2); }
   .read-body { padding: 28px; font-size: 16px; line-height: 1.8; white-space: pre-wrap; }
   .read-body strong { color: var(--accent); font-weight: 600; }
+  .read-player {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--surface2);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .btn-listen {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--surface2); color: var(--text);
+    border: none; border-radius: 50px;
+    padding: 10px 20px; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: transform 0.12s, background 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-listen:hover { transform: translateY(-1px); background: var(--accent); color: var(--text-inv); }
+  .btn-listen.playing { background: var(--accent); color: var(--text-inv); }
+  .tts-speed {
+    background: var(--bg); border: 1px solid var(--surface2);
+    color: var(--text2); border-radius: 50px;
+    padding: 6px 12px; font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .tts-speed:hover { border-color: var(--accent); }
+  .tts-progress {
+    flex: 1; height: 3px; background: var(--surface2); border-radius: 3px; overflow: hidden;
+  }
+  .tts-progress-bar {
+    height: 100%; width: 0%; background: var(--accent);
+    border-radius: 3px; transition: width 0.3s;
+  }
   .read-footer {
     padding: 20px 28px; border-top: 1px solid var(--surface2);
     text-align: center; font-size: 12px; color: var(--text2);
@@ -281,6 +311,15 @@
         <div class="read-meta" id="readMeta"></div>
       </div>
       <div class="read-body" id="readBody"></div>
+      <div class="read-player" id="readPlayer">
+        <button class="btn-listen" id="listenBtn" onclick="toggleTTS()">
+          <span id="listenIcon">🔊</span> <span id="listenLabel">Listen</span>
+        </button>
+        <div class="tts-progress" id="ttsProgress" style="display:none">
+          <div class="tts-progress-bar" id="ttsBar"></div>
+        </div>
+        <button class="tts-speed" id="speedBtn" onclick="cycleSpeed()">1×</button>
+      </div>
       <div class="read-footer">
         Shared via <a onclick="goCompose()">MsgDrop</a> — send long messages as links
       </div>
@@ -390,6 +429,7 @@
     document.getElementById('readView').style.display = 'block';
     document.getElementById('readTitle').textContent = data.t;
     document.getElementById('readBody').innerHTML = renderText(data.b);
+    ttsText = data.b.replace(/\*\*/g, '');
     if (data.d) {
       const date = new Date(data.d);
       document.getElementById('readMeta').textContent =
@@ -403,6 +443,161 @@
     document.getElementById('readView').style.display = 'none';
     document.title = 'MsgDrop — Long Messages, One Tap';
   }
+  // ─── TTS ──────────────────────────────────────────
+  let ttsUtterance = null;
+  let ttsPlaying = false;
+  let ttsSpeed = 1;
+  const speeds = [1, 1.25, 1.5, 0.75];
+  let speedIndex = 0;
+  let ttsText = '';
+
+  function detectLanguage(text) {
+    const s = text.substring(0, 800).toLowerCase();
+    const patterns = [
+      ['it-IT', /\b(che|è|dell[ao]|sono|con|una|questo|quello|già|perché|anche|essere|hanno|stato|come|più|tutto|fare|dopo|ancora)\b/g],
+      ['es-ES', /\b(que|está|para|como|pero|también|puede|tiene|esto|sobre|cuando|todos|entre|porque|desde|donde|antes|después)\b/g],
+      ['pt-BR', /\b(que|está|para|como|também|pode|isso|não|uma|mais|quando|muito|ainda|aqui|foram|fazer|pelos|estas)\b/g],
+      ['fr-FR', /\b(que|est|pour|les|des|une|avec|dans|cette|sont|nous|vous|mais|tout|plus|leur|fait|être|même|aussi)\b/g],
+      ['de-DE', /\b(und|der|die|das|ist|für|mit|auf|ein|nicht|sich|auch|wird|oder|nach|noch|bei|kann|aber|wenn)\b/g],
+      ['nl-NL', /\b(het|een|van|dat|die|niet|zijn|voor|met|ook|maar|deze|werd|nog|wel|naar|zij|wat|bij|uit)\b/g],
+      ['pl-PL', /\b(jest|nie|się|jak|ale|czy|tego|już|tak|tylko|był|może|będzie|bardzo|przez|przed|jeszcze)\b/g],
+      ['ru-RU', /[а-яё]{3,}/g],
+      ['uk-UA', /\b(що|як|але|від|або|для|його|вона|цей|після|були|може|також|якщо|ще|між|під|без)\b/g],
+      ['ja-JP', /[\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]/g],
+      ['ko-KR', /[\uac00-\ud7af\u1100-\u11ff]/g],
+      ['zh-CN', /[\u4e00-\u9fff]/g],
+      ['ar-SA', /[\u0600-\u06ff]/g],
+      ['hi-IN', /[\u0900-\u097f]/g],
+      ['th-TH', /[\u0e00-\u0e7f]/g],
+      ['vi-VN', /[àáảãạăắằẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/g],
+      ['tr-TR', /\b(bir|bu|ile|için|olan|gibi|daha|çok|sonra|kadar|olarak|ancak|ise|veya|aynı|hem)\b/g],
+      ['sv-SE', /\b(och|det|att|som|för|med|den|inte|har|var|från|kan|till|vid|utan|efter|alla|där|mycket)\b/g],
+      ['da-DK', /\b(og|det|at|som|for|med|den|ikke|har|var|fra|kan|til|ved|efter|alle|der|meget|igen)\b/g],
+      ['nb-NO', /\b(og|det|som|for|med|ikke|har|kan|fra|til|etter|alle|også|bare|eller|når|noen|denne)\b/g],
+      ['fi-FI', /\b(ja|on|ei|se|kun|niin|ole|oli|ovat|myös|mutta|vain|nyt|kuin|joka|olla|yli|joten)\b/g],
+      ['el-GR', /[\u0370-\u03ff]/g],
+      ['he-IL', /[\u0590-\u05ff]/g],
+      ['ro-RO', /\b(este|sunt|care|din|sau|acest|pentru|mai|fost|prin|când|doar|fiind|după|între|fără)\b/g],
+      ['cs-CZ', /\b(jest|není|jsou|být|jako|ale|když|také|nebo|jeho|ještě|může|bylo|před|další|velmi)\b/g],
+      ['hu-HU', /\b(egy|hogy|nem|van|volt|meg|még|csak|vagy|mint|már|azt|lett|után|között|minden)\b/g],
+      ['id-ID', /\b(yang|dan|dari|untuk|dengan|pada|adalah|ini|tidak|akan|juga|atau|itu|ke|dalam|ada)\b/g],
+    ];
+
+    let best = 'en-US';
+    let bestScore = 0;
+
+    for (const [lang, regex] of patterns) {
+      const matches = s.match(regex);
+      const score = matches ? matches.length : 0;
+      if (score > bestScore) {
+        bestScore = score;
+        best = lang;
+      }
+    }
+
+    // Only switch from English if we have strong signal
+    return bestScore >= 3 ? best : 'en-US';
+  }
+
+  function getBestVoice(lang) {
+    const voices = speechSynthesis.getVoices();
+    if (!voices.length) return null;
+    // Prefer neural/natural voices
+    const langVoices = voices.filter(v => v.lang.startsWith(lang.substring(0, 2)));
+    const neural = langVoices.find(v => /natural|neural|online|enhanced/i.test(v.name));
+    return neural || langVoices[0] || voices[0];
+  }
+
+  function toggleTTS() {
+    if (ttsPlaying) {
+      speechSynthesis.cancel();
+      ttsPlaying = false;
+      updateTTSUI();
+      return;
+    }
+
+    if (!ttsText) return;
+
+    // Split into chunks (speechSynthesis has limits on long text)
+    speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(ttsText);
+    const lang = detectLanguage(ttsText);
+    utterance.lang = lang;
+    utterance.rate = ttsSpeed;
+
+    const voice = getBestVoice(lang);
+    if (voice) utterance.voice = voice;
+
+    // Progress simulation
+    const words = ttsText.split(/\s+/).length;
+    const estimatedDuration = (words / 150) * 60 / ttsSpeed; // ~150 wpm
+    let startTime;
+
+    utterance.onstart = () => {
+      ttsPlaying = true;
+      startTime = Date.now();
+      document.getElementById('ttsProgress').style.display = 'block';
+      updateTTSUI();
+      updateProgress(startTime, estimatedDuration);
+    };
+
+    utterance.onend = () => {
+      ttsPlaying = false;
+      document.getElementById('ttsBar').style.width = '100%';
+      setTimeout(() => {
+        document.getElementById('ttsBar').style.width = '0%';
+        document.getElementById('ttsProgress').style.display = 'none';
+        updateTTSUI();
+      }, 500);
+    };
+
+    utterance.onerror = () => {
+      ttsPlaying = false;
+      updateTTSUI();
+    };
+
+    ttsUtterance = utterance;
+    speechSynthesis.speak(utterance);
+  }
+
+  function updateProgress(startTime, duration) {
+    if (!ttsPlaying) return;
+    const elapsed = (Date.now() - startTime) / 1000;
+    const pct = Math.min((elapsed / duration) * 100, 95);
+    document.getElementById('ttsBar').style.width = pct + '%';
+    requestAnimationFrame(() => updateProgress(startTime, duration));
+  }
+
+  function updateTTSUI() {
+    const btn = document.getElementById('listenBtn');
+    const icon = document.getElementById('listenIcon');
+    const label = document.getElementById('listenLabel');
+    if (ttsPlaying) {
+      btn.classList.add('playing');
+      icon.textContent = '⏹';
+      label.textContent = 'Stop';
+    } else {
+      btn.classList.remove('playing');
+      icon.textContent = '🔊';
+      label.textContent = 'Listen';
+    }
+  }
+
+  function cycleSpeed() {
+    speedIndex = (speedIndex + 1) % speeds.length;
+    ttsSpeed = speeds[speedIndex];
+    document.getElementById('speedBtn').textContent = ttsSpeed + '×';
+    // If playing, restart with new speed
+    if (ttsPlaying) {
+      speechSynthesis.cancel();
+      ttsPlaying = false;
+      toggleTTS();
+    }
+  }
+
+  // Preload voices
+  speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+
   function init() {
     const hash = window.location.hash.substring(1);
     if (hash) {
