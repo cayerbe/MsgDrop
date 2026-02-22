@@ -942,21 +942,42 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       });
 
       if (langVoices.length > 0) {
-        var neural = langVoices.find(function (v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
-        if (neural) return neural;
-        var quality = langVoices.find(function (v) { return !/compact/i.test(v.name); });
-        if (quality) return quality;
-        return langVoices[0];
+        // Score each voice by quality indicators
+        var scored = langVoices.map(function (v) {
+          var name = (v.name || '').toLowerCase();
+          var score = 0;
+          // Premium/neural indicators (highest priority)
+          if (/enhanced|premium|natural|neural/i.test(v.name)) score += 100;
+          // Cloud voices (Google, Microsoft) tend to be better
+          if (/google|microsoft/i.test(v.name)) score += 80;
+          // Remote/cloud voices are usually higher quality
+          if (!v.localService) score += 50;
+          // Penalize compact/basic voices
+          if (/compact|basic/i.test(v.name)) score -= 50;
+          return { voice: v, score: score };
+        });
+        scored.sort(function (a, b) { return b.score - a.score; });
+        console.log('[TTS] Available voices for ' + lang + ':', scored.map(function(s) { return s.voice.name + ' (' + s.score + ')'; }).join(', '));
+        return scored[0].voice;
       }
 
+      // Fallback: try English with same quality ranking
       if (prefix !== 'en') {
         var enVoices = voices.filter(function (v) {
           var vl = (v.lang || '').replace('_', '-').toLowerCase();
           return vl.startsWith('en-') || vl === 'en';
         });
         if (enVoices.length > 0) {
-          var enNeural = enVoices.find(function (v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
-          return enNeural || enVoices[0];
+          var enScored = enVoices.map(function (v) {
+            var score = 0;
+            if (/enhanced|premium|natural|neural/i.test(v.name)) score += 100;
+            if (/google|microsoft/i.test(v.name)) score += 80;
+            if (!v.localService) score += 50;
+            if (/compact|basic/i.test(v.name)) score -= 50;
+            return { voice: v, score: score };
+          });
+          enScored.sort(function (a, b) { return b.score - a.score; });
+          return enScored[0].voice;
         }
       }
 
