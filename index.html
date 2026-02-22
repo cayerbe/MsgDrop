@@ -948,10 +948,12 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
           var score = 0;
           // Premium/neural indicators (highest priority)
           if (/enhanced|premium|natural|neural/i.test(v.name)) score += 100;
-          // Cloud voices (Google, Microsoft) tend to be better
-          if (/google|microsoft/i.test(v.name)) score += 80;
+          // Cloud voices (Google, Microsoft, Apple) tend to be better
+          if (/google|microsoft|siri/i.test(v.name)) score += 80;
           // Remote/cloud voices are usually higher quality
           if (!v.localService) score += 50;
+          // Apple "Enhanced" or named voices (like "Luca", "Alice") are good on iOS/macOS
+          if (/enhanced/i.test(v.name)) score += 40;
           // Penalize compact/basic voices
           if (/compact|basic/i.test(v.name)) score -= 50;
           return { voice: v, score: score };
@@ -971,8 +973,9 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
           var enScored = enVoices.map(function (v) {
             var score = 0;
             if (/enhanced|premium|natural|neural/i.test(v.name)) score += 100;
-            if (/google|microsoft/i.test(v.name)) score += 80;
+            if (/google|microsoft|siri/i.test(v.name)) score += 80;
             if (!v.localService) score += 50;
+            if (/enhanced/i.test(v.name)) score += 40;
             if (/compact|basic/i.test(v.name)) score -= 50;
             return { voice: v, score: score };
           });
@@ -988,77 +991,92 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       if (ttsPlaying) {
         speechSynthesis.cancel();
         ttsPlaying = false;
+        document.getElementById('ttsBar').style.width = '0%';
+        document.getElementById('ttsProgress').style.display = 'none';
         updateTTSUI();
         return;
       }
 
       if (!ttsText) return;
 
-      var voices = speechSynthesis.getVoices();
-      if (!voices.length) {
-        console.log('[TTS] Voices not loaded yet, waiting...');
-        speechSynthesis.onvoiceschanged = function () {
-          speechSynthesis.onvoiceschanged = null;
-          var v = speechSynthesis.getVoices();
-          console.log('[TTS] Voices loaded:', v.length);
-          if (v.length) startSpeaking();
-        };
-        setTimeout(function () {
-          if (!ttsPlaying && speechSynthesis.onvoiceschanged) {
-            speechSynthesis.onvoiceschanged = null;
-            var lastTry = speechSynthesis.getVoices();
-            if (lastTry.length) startSpeaking();
-          }
-        }, 3000);
-        return;
-      }
-
+      // CRITICAL: Chrome requires speak() to be called synchronously
+      // from a user gesture (click). Do NOT defer to onvoiceschanged.
       startSpeaking();
     }
 
     function startSpeaking() {
       speechSynthesis.cancel();
       var lang = detectLanguage(ttsText);
-
-      var utterance = new SpeechSynthesisUtterance(ttsText);
-      utterance.lang = lang;
-      utterance.rate = ttsSpeed;
-
       var voice = getBestVoice(lang);
-      if (voice) {
-        utterance.voice = voice;
-        utterance.lang = voice.lang;
-        console.log('[TTS] Using voice:', voice.name, '(' + voice.lang + ')');
+
+      // Chrome cuts off speech after ~15s. Split into sentence chunks.
+      var chunks = ttsText.match(/[^.!?。！？\n]+[.!?。！？\n]*/g) || [ttsText];
+
+      // Merge small chunks to avoid choppy speech
+      var merged = [];
+      var current = '';
+      for (var i = 0; i < chunks.length; i++) {
+        if ((current + chunks[i]).length > 200 && current.length > 0) {
+          merged.push(current.trim());
+          current = chunks[i];
+        } else {
+          current += chunks[i];
+        }
       }
+      if (current.trim()) merged.push(current.trim());
 
       var words = ttsText.split(/\s+/).length;
       var estimatedDuration = (words / 150) * 60 / ttsSpeed;
-      var startTime;
+      var startTime = Date.now();
+      var chunkIndex = 0;
 
-      utterance.onstart = function () {
-        ttsPlaying = true;
-        startTime = Date.now();
-        document.getElementById('ttsProgress').style.display = 'block';
-        updateTTSUI();
-        updateProgress(startTime, estimatedDuration);
-      };
+      function speakNext() {
+        if (chunkIndex >= merged.length) {
+          ttsPlaying = false;
+          document.getElementById('ttsBar').style.width = '100%';
+          setTimeout(function () {
+            document.getElementById('ttsBar').style.width = '0%';
+            document.getElementById('ttsProgress').style.display = 'none';
+            updateTTSUI();
+          }, 500);
+          return;
+        }
 
-      utterance.onend = function () {
-        ttsPlaying = false;
-        document.getElementById('ttsBar').style.width = '100%';
-        setTimeout(function () {
-          document.getElementById('ttsBar').style.width = '0%';
-          document.getElementById('ttsProgress').style.display = 'none';
+        var utterance = new SpeechSynthesisUtterance(merged[chunkIndex]);
+        utterance.lang = lang;
+        utterance.rate = ttsSpeed;
+        if (voice) {
+          utterance.voice = voice;
+          utterance.lang = voice.lang;
+        }
+
+        utterance.onstart = function () {
+          if (chunkIndex === 0) {
+            ttsPlaying = true;
+            document.getElementById('ttsProgress').style.display = 'block';
+            updateTTSUI();
+            updateProgress(startTime, estimatedDuration);
+            if (voice) {
+              console.log('[TTS] Using voice:', voice.name, '(' + voice.lang + ')');
+            }
+          }
+        };
+
+        utterance.onend = function () {
+          chunkIndex++;
+          if (ttsPlaying) speakNext();
+        };
+
+        utterance.onerror = function (e) {
+          console.warn('[TTS] Error on chunk', chunkIndex, e.error);
+          ttsPlaying = false;
           updateTTSUI();
-        }, 500);
-      };
+        };
 
-      utterance.onerror = function () {
-        ttsPlaying = false;
-        updateTTSUI();
-      };
+        speechSynthesis.speak(utterance);
+      }
 
-      speechSynthesis.speak(utterance);
+      speakNext();
     }
 
     function updateProgress(startTime, duration) {
@@ -1095,9 +1113,19 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       }
     }
 
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-      speechSynthesis.onvoiceschanged = function () { speechSynthesis.getVoices(); };
-    }
+    // Preload voices aggressively on page load
+    (function preloadVoices() {
+      speechSynthesis.getVoices();
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = function () {
+          var v = speechSynthesis.getVoices();
+          console.log('[TTS] Voices preloaded:', v.length);
+        };
+      }
+      // Chrome sometimes needs multiple nudges
+      setTimeout(function () { speechSynthesis.getVoices(); }, 100);
+      setTimeout(function () { speechSynthesis.getVoices(); }, 500);
+    })();
 
     // ─── Likes ──────────────────────────────────────────
     // Railway API for shared like counts
