@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,287 +7,267 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
+  [data-theme="dark"] {
     --bg: #0f1117;
     --surface: #1a1d27;
     --surface2: #242837;
     --accent: #6ee7b7;
     --accent2: #34d399;
+    --accent-glow: rgba(110, 231, 183, 0.15);
     --text: #e8eaf0;
     --text2: #9ca3b4;
+    --text-inv: #1a1d27;
     --radius: 14px;
+    --toggle-bg: #242837;
+    --toggle-knob: #6ee7b7;
+    --noise-opacity: 0.03;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.3);
+    --gradient-top: rgba(110,231,183,0.05);
   }
-
+  [data-theme="light"] {
+    --bg: #f4f2ee;
+    --surface: #ffffff;
+    --surface2: #e8e5df;
+    --accent: #0d9668;
+    --accent2: #10b981;
+    --accent-glow: rgba(13, 150, 104, 0.1);
+    --text: #1a1a1a;
+    --text2: #6b7280;
+    --text-inv: #ffffff;
+    --radius: 14px;
+    --toggle-bg: #e8e5df;
+    --toggle-knob: #0d9668;
+    --noise-opacity: 0.015;
+    --card-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    --gradient-top: rgba(13, 150, 104, 0.04);
+  }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
   body {
     font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    line-height: 1.6;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; line-height: 1.6;
+    transition: background 0.4s ease, color 0.3s ease;
   }
-
   .noise {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0.03;
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    opacity: var(--noise-opacity);
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 256px;
   }
-
   .container {
     position: relative; z-index: 1;
-    max-width: 640px; margin: 0 auto;
-    padding: 40px 20px 60px;
+    max-width: 640px; margin: 0 auto; padding: 40px 20px 60px;
   }
-
-  /* Header */
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-    margin-bottom: 8px;
+  .header-row {
+    display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
   }
+  .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon {
     width: 36px; height: 36px;
     background: linear-gradient(135deg, var(--accent), #3b82f6);
     border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
   }
   .logo-text {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px; font-weight: 700;
+    font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700;
     background: linear-gradient(135deg, var(--accent), #93c5fd);
     -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .tagline {
-    color: var(--text2); font-size: 14px; margin-bottom: 36px;
+  .theme-toggle {
+    position: relative; width: 56px; height: 30px;
+    background: var(--toggle-bg); border-radius: 50px;
+    border: none; cursor: pointer; transition: background 0.3s ease; overflow: hidden;
   }
-
-  /* Compose mode */
+  .theme-toggle::before {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 24px; height: 24px; background: var(--toggle-knob);
+    border-radius: 50%;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s; z-index: 2;
+  }
+  [data-theme="light"] .theme-toggle::before { transform: translateX(26px); }
+  .toggle-icons {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 7px; font-size: 13px; z-index: 1; pointer-events: none;
+  }
+  .tagline { color: var(--text2); font-size: 14px; margin-bottom: 36px; }
   .field-label {
     font-size: 11px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 1.5px;
     color: var(--accent); margin-bottom: 8px;
   }
-
   input[type="text"], textarea {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid transparent;
-    border-radius: var(--radius);
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 16px;
-    padding: 14px 18px;
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%; background: var(--surface);
+    border: 1px solid var(--surface2); border-radius: var(--radius);
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 16px;
+    padding: 14px 18px; outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.3s;
   }
   input[type="text"]:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(110, 231, 183, 0.1);
+    border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow);
   }
-  input[type="text"]::placeholder, textarea::placeholder {
-    color: var(--text2);
-  }
-
+  input[type="text"]::placeholder, textarea::placeholder { color: var(--text2); }
   .title-input { font-size: 20px; font-weight: 600; margin-bottom: 16px; }
-
-  textarea {
-    min-height: 260px; resize: vertical;
-    line-height: 1.7;
-  }
-
-  .char-count {
-    text-align: right; font-size: 12px; color: var(--text2); margin-top: 6px;
-  }
-
+  textarea { min-height: 260px; resize: vertical; line-height: 1.7; }
+  .char-count { text-align: right; font-size: 12px; color: var(--text2); margin-top: 6px; }
   .btn {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     background: linear-gradient(135deg, var(--accent2), var(--accent));
-    color: var(--bg); font-weight: 700; font-size: 15px;
+    color: var(--text-inv); font-weight: 700; font-size: 15px;
     border: none; border-radius: var(--radius);
-    padding: 16px 32px; cursor: pointer;
-    width: 100%; margin-top: 24px;
+    padding: 16px 32px; cursor: pointer; width: 100%; margin-top: 24px;
     transition: transform 0.15s, box-shadow 0.15s;
   }
-  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(110, 231, 183, 0.2); }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px var(--accent-glow); }
   .btn:active { transform: translateY(0); }
-
-  /* Result */
-  .result {
-    display: none;
-    margin-top: 28px;
-    animation: fadeUp 0.4s ease;
-  }
+  .btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+  .result { display: none; margin-top: 28px; animation: fadeUp 0.4s ease; }
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
   .result-box {
-    background: var(--surface);
-    border: 1px solid var(--surface2);
-    border-radius: var(--radius);
-    padding: 20px;
+    background: var(--surface); border: 1px solid var(--surface2);
+    border-radius: var(--radius); padding: 20px; box-shadow: var(--card-shadow);
   }
   .result-label {
     font-size: 11px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 1.5px;
     color: var(--accent); margin-bottom: 10px;
   }
-  .result-link {
-    word-break: break-all;
-    font-size: 13px; color: var(--text2);
-    background: var(--bg);
-    padding: 12px 14px;
-    border-radius: 10px;
-    line-height: 1.5;
-    max-height: 80px; overflow: auto;
+  .result-links { display: flex; flex-direction: column; gap: 10px; }
+  .link-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--bg); padding: 12px 14px; border-radius: 10px;
   }
-
-  .copy-row {
-    display: flex; gap: 10px; margin-top: 14px;
+  .link-row .label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text2); min-width: 50px;
   }
+  .link-row .url {
+    flex: 1; font-size: 15px; color: var(--accent);
+    font-weight: 600; word-break: break-all; line-height: 1.4;
+  }
+  .link-row .url.long-url {
+    font-size: 11px; color: var(--text2); font-weight: 400;
+    max-height: 40px; overflow: hidden;
+  }
+  .link-row .url.short-loading { color: var(--text2); font-style: italic; font-weight: 400; }
+  .link-row .url.short-error { color: #f87171; font-size: 12px; font-weight: 400; }
+  .copy-row { display: flex; gap: 10px; margin-top: 14px; }
   .btn-sm {
-    flex: 1;
-    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    padding: 12px 18px;
-    border-radius: 10px;
-    font-weight: 600; font-size: 14px;
-    cursor: pointer; border: none;
-    transition: transform 0.12s, opacity 0.2s;
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 18px; border-radius: 10px;
+    font-weight: 600; font-size: 14px; cursor: pointer; border: none;
+    transition: transform 0.12s;
   }
   .btn-sm:hover { transform: translateY(-1px); }
-  .btn-copy {
-    background: var(--surface2); color: var(--text);
-  }
-  .btn-wa {
-    background: #25d366; color: #fff;
-  }
-
+  .btn-copy { background: var(--surface2); color: var(--text); }
+  .btn-wa { background: #25d366; color: #fff; }
   .wa-preview {
-    margin-top: 20px;
-    background: var(--surface);
-    border: 1px solid var(--surface2);
-    border-radius: var(--radius);
-    padding: 20px;
+    margin-top: 20px; background: var(--surface);
+    border: 1px solid var(--surface2); border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--card-shadow);
   }
   .wa-preview-label {
     font-size: 11px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 1.5px;
     color: var(--text2); margin-bottom: 10px;
   }
-  .wa-preview-text {
-    font-size: 15px; color: var(--text);
-    white-space: pre-wrap; line-height: 1.6;
-  }
-  .wa-preview-text .wa-link {
-    color: #93c5fd; text-decoration: underline;
-  }
-
-  /* Read mode */
+  .wa-preview-text { font-size: 15px; color: var(--text); white-space: pre-wrap; line-height: 1.6; }
+  .wa-preview-text .wa-link { color: #93c5fd; text-decoration: underline; }
+  [data-theme="light"] .wa-preview-text .wa-link { color: #2563eb; }
   .read-view { display: none; }
-
   .read-card {
-    background: var(--surface);
-    border: 1px solid var(--surface2);
-    border-radius: 18px;
-    overflow: hidden;
-    animation: fadeUp 0.5s ease;
+    background: var(--surface); border: 1px solid var(--surface2);
+    border-radius: 18px; overflow: hidden;
+    animation: fadeUp 0.5s ease; box-shadow: var(--card-shadow);
   }
   .read-header {
-    padding: 32px 28px 24px;
-    border-bottom: 1px solid var(--surface2);
-    background: linear-gradient(180deg, rgba(110,231,183,0.05) 0%, transparent 100%);
+    padding: 32px 28px 24px; border-bottom: 1px solid var(--surface2);
+    background: linear-gradient(180deg, var(--gradient-top) 0%, transparent 100%);
   }
   .read-title {
     font-family: 'Playfair Display', serif;
-    font-size: 26px; font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 8px;
+    font-size: 26px; font-weight: 700; line-height: 1.3; margin-bottom: 8px;
   }
-  .read-meta {
-    font-size: 13px; color: var(--text2);
-  }
-  .read-body {
-    padding: 28px;
-    font-size: 16px;
-    line-height: 1.8;
-    white-space: pre-wrap;
-    color: var(--text);
-  }
-  .read-footer {
-    padding: 20px 28px;
-    border-top: 1px solid var(--surface2);
-    text-align: center;
-    font-size: 12px; color: var(--text2);
-  }
-  .read-footer a {
-    color: var(--accent); text-decoration: none;
-  }
-
-  /* Markdown-like rendering */
+  .read-meta { font-size: 13px; color: var(--text2); }
+  .read-body { padding: 28px; font-size: 16px; line-height: 1.8; white-space: pre-wrap; }
   .read-body strong { color: var(--accent); font-weight: 600; }
-
+  .read-footer {
+    padding: 20px 28px; border-top: 1px solid var(--surface2);
+    text-align: center; font-size: 12px; color: var(--text2);
+  }
+  .read-footer a { color: var(--accent); text-decoration: none; cursor: pointer; }
   .compose-view { display: block; }
-
-  /* Responsive */
   @media (max-width: 480px) {
     .container { padding: 24px 16px 40px; }
     .read-header { padding: 24px 20px 20px; }
     .read-body { padding: 20px; }
     .read-title { font-size: 22px; }
+    .link-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+    .link-row .label { min-width: auto; }
   }
 </style>
 </head>
 <body>
-
 <div class="noise"></div>
-
 <div class="container">
-  <!-- COMPOSE VIEW -->
   <div class="compose-view" id="composeView">
-    <div class="logo">
-      <div class="logo-icon">💧</div>
-      <div class="logo-text">MsgDrop</div>
+    <div class="header-row">
+      <div class="logo">
+        <div class="logo-icon">💧</div>
+        <div class="logo-text">MsgDrop</div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span class="toggle-icons"><span>🌙</span><span>☀️</span></span>
+      </button>
     </div>
     <div class="tagline">Write a long message. Share a short link. No server, no signup.</div>
-
     <div class="field-label">Title</div>
     <input type="text" class="title-input" id="msgTitle" placeholder="e.g. Meeting notes for Monday">
-
     <div class="field-label" style="margin-top: 20px;">Message</div>
     <textarea id="msgBody" placeholder="Write your full message here...&#10;&#10;Supports **bold** text and line breaks."></textarea>
     <div class="char-count"><span id="charCount">0</span> chars</div>
-
-    <button class="btn" onclick="generate()">
+    <button class="btn" id="generateBtn" onclick="generate()">
       <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
       Generate Link
     </button>
-
     <div class="result" id="result">
       <div class="result-box">
-        <div class="result-label">Your link</div>
-        <div class="result-link" id="resultLink"></div>
+        <div class="result-label">Your links</div>
+        <div class="result-links">
+          <div class="link-row">
+            <span class="label">Short</span>
+            <span class="url" id="shortUrl"></span>
+          </div>
+          <div class="link-row">
+            <span class="label">Full</span>
+            <span class="url long-url" id="fullUrl"></span>
+          </div>
+        </div>
         <div class="copy-row">
-          <button class="btn-sm btn-copy" onclick="copyLink()">📋 Copy Link</button>
+          <button class="btn-sm btn-copy" id="copyBtn" onclick="copyLink()">📋 Copy Short Link</button>
           <button class="btn-sm btn-wa" onclick="shareWhatsApp()">💬 WhatsApp</button>
         </div>
       </div>
-
       <div class="wa-preview">
         <div class="wa-preview-label">WhatsApp preview</div>
         <div class="wa-preview-text" id="waPreview"></div>
       </div>
     </div>
   </div>
-
-  <!-- READ VIEW -->
   <div class="read-view" id="readView">
-    <div class="logo" style="margin-bottom: 24px;">
-      <div class="logo-icon">💧</div>
-      <div class="logo-text">MsgDrop</div>
+    <div class="header-row" style="margin-bottom: 24px;">
+      <div class="logo">
+        <div class="logo-icon">💧</div>
+        <div class="logo-text">MsgDrop</div>
+      </div>
+      <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <span class="toggle-icons"><span>🌙</span><span>☀️</span></span>
+      </button>
     </div>
-
     <div class="read-card">
       <div class="read-header">
         <div class="read-title" id="readTitle"></div>
@@ -295,21 +275,23 @@
       </div>
       <div class="read-body" id="readBody"></div>
       <div class="read-footer">
-        Shared via <a href="#" onclick="goCompose()">MsgDrop</a> — send long messages as links
+        Shared via <a onclick="goCompose()">MsgDrop</a> — send long messages as links
       </div>
     </div>
   </div>
 </div>
-
 <script>
   const VERSION = 1;
-
-  // ─── Encoding ───────────────────────────────────────
+  let currentTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', currentTheme);
+  function toggleTheme() {
+    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+  }
   function encodeMessage(title, body) {
     const payload = JSON.stringify({ v: VERSION, t: title, b: body, d: Date.now() });
     return LZString.compressToEncodedURIComponent(payload);
   }
-
   function decodeMessage(hash) {
     try {
       const json = LZString.decompressFromEncodedURIComponent(hash);
@@ -317,99 +299,112 @@
       return JSON.parse(json);
     } catch { return null; }
   }
-
-  // ─── Render markdown-ish ────────────────────────────
   function renderText(text) {
-    return text
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   }
-
-  // ─── Compose ────────────────────────────────────────
+  async function shortenUrl(longUrl) {
+    const services = [
+      'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl),
+      'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl)
+    ];
+    for (const endpoint of services) {
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        if (data.shorturl) return data.shorturl;
+      } catch(e) { continue; }
+    }
+    return null;
+  }
   const msgBody = document.getElementById('msgBody');
   const charCount = document.getElementById('charCount');
-  msgBody.addEventListener('input', () => {
-    charCount.textContent = msgBody.value.length;
-  });
-
-  let generatedUrl = '';
-
-  function generate() {
+  msgBody.addEventListener('input', () => { charCount.textContent = msgBody.value.length; });
+  let shareUrl = '';
+  let fullUrl = '';
+  async function generate() {
     const title = document.getElementById('msgTitle').value.trim();
     const body = msgBody.value.trim();
     if (!body) { msgBody.focus(); return; }
-
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
     const hash = encodeMessage(title || 'Message', body);
     const base = window.location.origin + window.location.pathname;
-    generatedUrl = base + '#' + hash;
-
-    document.getElementById('resultLink').textContent = generatedUrl;
-
-    // WhatsApp preview
-    const displayTitle = title || 'Message';
-    const preview = body.length > 120 ? body.substring(0, 120) + '…' : body;
-    document.getElementById('waPreview').innerHTML =
-      `📩 <strong>${displayTitle}</strong>\n\n${renderText(preview)}\n\n👉 <span class="wa-link">${generatedUrl.substring(0, 60)}…</span>`;
-
+    fullUrl = base + '#' + hash;
+    shareUrl = fullUrl;
+    document.getElementById('fullUrl').textContent = fullUrl;
+    document.getElementById('shortUrl').textContent = 'Shortening...';
+    document.getElementById('shortUrl').className = 'url short-loading';
     document.getElementById('result').style.display = 'block';
     document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    updateWaPreview(title, body, shareUrl);
+    try {
+      const shortUrl = await shortenUrl(fullUrl);
+      if (shortUrl) {
+        shareUrl = shortUrl;
+        document.getElementById('shortUrl').textContent = shortUrl;
+        document.getElementById('shortUrl').className = 'url';
+        updateWaPreview(title, body, shortUrl);
+      } else {
+        document.getElementById('shortUrl').textContent = 'Shortener unavailable — use full link';
+        document.getElementById('shortUrl').className = 'url short-error';
+        document.getElementById('copyBtn').textContent = '📋 Copy Full Link';
+      }
+    } catch(e) {
+      document.getElementById('shortUrl').textContent = 'Shortener unavailable — use full link';
+      document.getElementById('shortUrl').className = 'url short-error';
+      document.getElementById('copyBtn').textContent = '📋 Copy Full Link';
+    }
+    btn.disabled = false;
   }
-
+  function updateWaPreview(title, body, url) {
+    const displayTitle = title || 'Message';
+    const preview = body.length > 140 ? body.substring(0, 140) + '…' : body;
+    document.getElementById('waPreview').innerHTML =
+      '📩 <strong>' + renderText(displayTitle) + '</strong>\n\n' + renderText(preview) + '\n\n👉 <span class="wa-link">' + url + '</span>';
+  }
   function copyLink() {
-    navigator.clipboard.writeText(generatedUrl).then(() => {
-      const btn = document.querySelector('.btn-copy');
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      const btn = document.getElementById('copyBtn');
+      const orig = btn.textContent;
       btn.textContent = '✓ Copied!';
-      setTimeout(() => btn.innerHTML = '📋 Copy Link', 1500);
+      setTimeout(() => btn.textContent = orig, 1500);
     });
   }
-
   function shareWhatsApp() {
     const title = document.getElementById('msgTitle').value.trim() || 'Message';
     const body = msgBody.value.trim();
-    const preview = body.length > 120 ? body.substring(0, 120) + '…' : body;
-    const text = `📩 *${title}*\n\n${preview}\n\n👉 ${generatedUrl}`;
+    const preview = body.length > 140 ? body.substring(0, 140) + '…' : body;
+    const text = '📩 *' + title + '*\n\n' + preview + '\n\n👉 ' + shareUrl;
     window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
   }
-
-  // ─── Read mode ──────────────────────────────────────
   function showRead(data) {
     document.getElementById('composeView').style.display = 'none';
     document.getElementById('readView').style.display = 'block';
     document.getElementById('readTitle').textContent = data.t;
     document.getElementById('readBody').innerHTML = renderText(data.b);
-
     if (data.d) {
       const date = new Date(data.d);
       document.getElementById('readMeta').textContent =
-        date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        date.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
     }
-
     document.title = data.t + ' — MsgDrop';
   }
-
   function goCompose() {
     history.pushState(null, '', window.location.pathname);
     document.getElementById('composeView').style.display = 'block';
     document.getElementById('readView').style.display = 'none';
     document.title = 'MsgDrop — Long Messages, One Tap';
   }
-
-  // ─── Init ───────────────────────────────────────────
   function init() {
     const hash = window.location.hash.substring(1);
     if (hash) {
       const data = decodeMessage(hash);
-      if (data) {
-        showRead(data);
-        return;
-      }
+      if (data) { showRead(data); return; }
     }
-    // default: compose mode
   }
-
   window.addEventListener('hashchange', init);
   init();
 </script>
-
 </body>
 </html>
