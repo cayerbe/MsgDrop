@@ -794,41 +794,43 @@ Supports **bold** text and line breaks."></textarea>
     var speedIndex = 0;
 
     function detectLanguage(text) {
-      var s = text.substring(0, 800);
-      var sLower = s.toLowerCase();
+      var s = text.substring(0, 1200).toLowerCase();
+      // Normalize: replace curly quotes/apostrophes with spaces, strip punctuation, pad with spaces
+      s = ' ' + s.replace(/['']/g, ' ').replace(/[^a-z\u00C0-\u024F\u0400-\u04FF\u0600-\u06FF\u0900-\u097F\u0E00-\u0E7F\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF\u0370-\u03FF\u0590-\u05FF\s]/g, ' ').replace(/\s+/g, ' ') + ' ';
+
       var patterns = [
-        ['it-IT', /\b(che|è|dell[ao]|sono|con|una|questo|quello|già|perché|anche|essere|hanno|stato|come|più|tutto|fare|dopo|ancora)\b/g],
-        ['es-ES', /\b(que|está|para|como|pero|también|puede|tiene|esto|sobre|cuando|todos|entre|porque|desde|donde|antes|después)\b/g],
-        ['pt-BR', /\b(que|está|para|como|também|pode|isso|não|uma|mais|quando|muito|ainda|aqui|foram|fazer|pelos|estas)\b/g],
-        ['fr-FR', /\b(que|est|pour|les|des|une|avec|dans|cette|sont|nous|vous|mais|tout|plus|leur|fait|être|même|aussi)\b/g],
-        ['de-DE', /\b(und|der|die|das|ist|für|mit|auf|ein|nicht|sich|auch|wird|oder|nach|noch|bei|kann|aber|wenn)\b/g],
-        ['nl-NL', /\b(het|een|van|dat|die|niet|zijn|voor|met|ook|maar|deze|werd|nog|wel|naar|zij|wat|bij|uit)\b/g],
-        ['pl-PL', /\b(jest|nie|się|jak|ale|czy|tego|już|tak|tylko|był|może|będzie|bardzo|przez|przed|jeszcze)\b/g],
+        ['it-IT', / (che |il |la |lo |le |gli |del |dei |della |delle |con |una |uno |sono |come |per |non |più |questo |quello |già |anche |essere |hanno |stato |tutto |fare |dopo |ancora |suo |sua |ogni |alla |alle |nel |nei |nella |molto |quando |dove |può |tra |fra |perché |senza |loro |questa |questi |quale |quali )/g],
+        ['es-ES', / (que |el |la |los |las |del |una |con |para |por |como |pero |más |también |puede |tiene |esto |sobre |cuando |todos |entre |porque |desde |donde |antes |después |cada |muy |otro |sin |todo |esta |este |ese )/g],
+        ['pt-BR', / (que |para |como |uma |com |por |mais |não |ele |ela |isso |também |pode |muito |ainda |aqui |foram |fazer |quando |cada |outro |todo |essa |esse |seu |sua )/g],
+        ['fr-FR', / (que |est |pour |les |des |une |avec |dans |cette |sont |nous |vous |mais |tout |plus |leur |fait |même |aussi |qui |par |sur |pas |ont |elle |ces |aux )/g],
+        ['de-DE', / (und |der |die |das |ist |für |mit |auf |ein |eine |nicht |sich |auch |wird |oder |nach |noch |bei |kann |aber |wenn |den |dem |des |von |aus |nur |wie |hat |sind )/g],
+        ['nl-NL', / (het |een |van |dat |die |niet |zijn |voor |met |ook |maar |deze |werd |nog |wel |naar |zij |wat |bij |uit )/g],
+        ['pl-PL', / (jest |nie |jak |ale |czy |tego |tak |tylko |może |bardzo |przez |przed |jeszcze )/g],
         ['ru-RU', /[а-яё]{3,}/g],
-        ['uk-UA', /\b(що|як|але|від|або|для|його|вона|цей|після|були|може|також|якщо|ще|між|під|без)\b/g],
-        ['ko-KR', /[\uac00-\ud7af\u1100-\u11ff]/g],
+        ['uk-UA', / (що |як |але |від |або |для |його |вона |цей |після |були |може |також |якщо )/g],
+        ['ko-KR', /[\uac00-\ud7af]/g],
         ['ar-SA', /[\u0600-\u06ff]/g],
         ['hi-IN', /[\u0900-\u097f]/g],
         ['th-TH', /[\u0e00-\u0e7f]/g],
         ['vi-VN', /[àáảãạăắằẵặâấầẩẫậèéẻẽẹêếềểễệìíỉĩịòóỏõọôốồổỗộơớờởỡợùúủũụưứừửữựỳýỷỹỵđ]/g],
-        ['tr-TR', /\b(bir|bu|ile|için|olan|gibi|daha|çok|sonra|kadar|olarak|ancak|ise|veya|aynı|hem)\b/g],
-        ['sv-SE', /\b(och|det|att|som|för|med|den|inte|har|var|från|kan|till|vid|utan|efter|alla|där|mycket)\b/g],
-        ['da-DK', /\b(og|det|at|som|for|med|den|ikke|har|var|fra|kan|til|ved|efter|alle|der|meget|igen)\b/g],
-        ['nb-NO', /\b(og|det|som|for|med|ikke|har|kan|fra|til|etter|alle|også|bare|eller|når|noen|denne)\b/g],
-        ['fi-FI', /\b(ja|on|ei|se|kun|niin|ole|oli|ovat|myös|mutta|vain|nyt|kuin|joka|olla|yli|joten)\b/g],
+        ['tr-TR', / (bir |bu |ile |olan |gibi |daha |sonra |kadar |olarak |ancak |ise |veya )/g],
+        ['sv-SE', / (och |det |att |som |med |den |inte |har |var |kan |till |utan |efter |alla |mycket )/g],
+        ['da-DK', / (og |det |at |som |for |med |den |ikke |har |var |fra |kan |til |efter |alle |meget )/g],
+        ['nb-NO', / (og |det |som |for |med |ikke |har |kan |fra |til |etter |alle )/g],
+        ['fi-FI', / (ja |on |ei |se |kun |niin |ole |oli |ovat |mutta |vain |nyt |kuin |joka )/g],
         ['el-GR', /[\u0370-\u03ff]/g],
         ['he-IL', /[\u0590-\u05ff]/g],
-        ['ro-RO', /\b(este|sunt|care|din|sau|acest|pentru|mai|fost|prin|când|doar|fiind|după|între|fără)\b/g],
-        ['cs-CZ', /\b(jest|není|jsou|být|jako|ale|když|také|nebo|jeho|ještě|může|bylo|před|další|velmi)\b/g],
-        ['hu-HU', /\b(egy|hogy|nem|van|volt|meg|még|csak|vagy|mint|már|azt|lett|után|között|minden)\b/g],
-        ['id-ID', /\b(yang|dan|dari|untuk|dengan|pada|adalah|ini|tidak|akan|juga|atau|itu|ke|dalam|ada)\b/g]
+        ['ro-RO', / (este |sunt |care |din |sau |acest |pentru |mai |fost |prin |doar |fiind )/g],
+        ['cs-CZ', / (jest |jsou |jako |ale |nebo |jeho |bylo |velmi )/g],
+        ['hu-HU', / (egy |hogy |nem |van |volt |meg |csak |vagy |mint |lett |minden )/g],
+        ['id-ID', / (yang |dan |dari |untuk |dengan |pada |adalah |ini |tidak |akan |juga |atau )/g]
       ];
 
       var best = 'en-US';
       var bestScore = 0;
 
       for (var i = 0; i < patterns.length; i++) {
-        var matches = sLower.match(patterns[i][1]);
+        var matches = s.match(patterns[i][1]);
         var score = matches ? matches.length : 0;
         if (score > bestScore) {
           bestScore = score;
@@ -836,36 +838,35 @@ Supports **bold** text and line breaks."></textarea>
         }
       }
 
-      // CJK disambiguation: Japanese vs Chinese
-      // Japanese uses Hiragana/Katakana (unique to Japanese) + Kanji (shared with Chinese)
-      // Chinese uses only Han/Kanji characters
+      // CJK disambiguation
       var kanaMatches = s.match(/[\u3040-\u309f\u30a0-\u30ff]/g);
       var hanMatches = s.match(/[\u4e00-\u9fff]/g);
       var kanaCount = kanaMatches ? kanaMatches.length : 0;
       var hanCount = hanMatches ? hanMatches.length : 0;
 
       if (kanaCount > 0 && (kanaCount + hanCount) > bestScore) {
-        // Has Japanese kana — it's Japanese
         best = 'ja-JP';
         bestScore = kanaCount + hanCount;
       } else if (hanCount > 0 && kanaCount === 0 && hanCount > bestScore) {
-        // Pure Han characters, no kana — it's Chinese
         best = 'zh-CN';
         bestScore = hanCount;
       }
 
-      var result = bestScore >= 3 ? best : 'en-US';
-      console.log('[TTS] detectLanguage: "' + s.substring(0, 60) + '..." → ' + result + ' (score: ' + bestScore + ')');
+      var result = bestScore >= 2 ? best : 'en-US';
+      console.log('[TTS] Lang: ' + result + ' (score: ' + bestScore + ')');
       return result;
     }
 
     function getBestVoice(lang) {
       var voices = speechSynthesis.getVoices();
       if (!voices.length) return null;
-      var prefix = lang.substring(0, 2);
+      var prefix = lang.substring(0, 2).toLowerCase();
 
-      // Get all voices matching the target language
-      var langVoices = voices.filter(function (v) { return v.lang.startsWith(prefix); });
+      // Match voices flexibly: handle it-IT, it_IT, it formats
+      var langVoices = voices.filter(function (v) {
+        var vl = (v.lang || '').replace('_', '-').toLowerCase();
+        return vl === lang.toLowerCase() || vl.startsWith(prefix + '-') || vl === prefix;
+      });
 
       if (langVoices.length > 0) {
         // Prefer neural/natural/enhanced voices
@@ -879,7 +880,10 @@ Supports **bold** text and line breaks."></textarea>
 
       // Fallback: try English, never return a random voice
       if (prefix !== 'en') {
-        var enVoices = voices.filter(function (v) { return v.lang.startsWith('en'); });
+        var enVoices = voices.filter(function (v) {
+          var vl = (v.lang || '').replace('_', '-').toLowerCase();
+          return vl.startsWith('en-') || vl === 'en';
+        });
         if (enVoices.length > 0) {
           var enNeural = enVoices.find(function (v) { return /natural|neural|online|enhanced|premium/i.test(v.name); });
           return enNeural || enVoices[0];
