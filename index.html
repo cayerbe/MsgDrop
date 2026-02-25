@@ -4,57 +4,57 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MsgDrop — Long Messages, One Tap</title>
+  <title>Ulissy Drop — Long Messages, One Tap</title>
   <meta property="og:title" content="📩 Hey! Read my message here">
   <meta property="og:description" content="Tap to open the full message — it was too long for chat!">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="MsgDrop">
-  <meta property="og:image" content="https://cayerbe.github.io/MsgDrop/og-image.png">
+  <meta property="og:site_name" content="Ulissy Drop">
+  <meta property="og:image" content="https://cayerbe.github.io/ulissy-drop/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="📩 Hey! Read my message here">
   <meta name="twitter:description" content="Tap to open the full message — it was too long for chat!">
-  <meta name="twitter:image" content="https://cayerbe.github.io/MsgDrop/og-image.png">
+  <meta name="twitter:image" content="https://cayerbe.github.io/ulissy-drop/og-image.png">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js"></script>
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=Playfair+Display:wght@600;700&display=swap"
     rel="stylesheet">
   <style>
     [data-theme="dark"] {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #242837;
-      --accent: #6ee7b7;
-      --accent2: #34d399;
-      --accent-glow: rgba(110, 231, 183, 0.15);
-      --text: #e8eaf0;
-      --text2: #9ca3b4;
-      --text-inv: #1a1d27;
+      --bg: #0a1214;
+      --surface: #0f1a1c;
+      --surface2: #1a2a2d;
+      --accent: #21CEE3;
+      --accent2: #1AB8CC;
+      --accent-glow: rgba(33, 206, 227, 0.2);
+      --text: #e8f4f5;
+      --text2: #8ab4ba;
+      --text-inv: #0a1214;
       --radius: 14px;
-      --toggle-bg: #242837;
-      --toggle-knob: #6ee7b7;
+      --toggle-bg: #1a2a2d;
+      --toggle-knob: #21CEE3;
       --noise-opacity: 0.03;
-      --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-      --gradient-top: rgba(110, 231, 183, 0.05);
+      --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+      --gradient-top: rgba(33, 206, 227, 0.08);
     }
 
     [data-theme="light"] {
-      --bg: #f4f2ee;
+      --bg: #f0f9fa;
       --surface: #ffffff;
-      --surface2: #e8e5df;
-      --accent: #0d9668;
-      --accent2: #10b981;
-      --accent-glow: rgba(13, 150, 104, 0.1);
-      --text: #1a1a1a;
-      --text2: #6b7280;
+      --surface2: #e0f2f4;
+      --accent: #1AB8CC;
+      --accent2: #21CEE3;
+      --accent-glow: rgba(33, 206, 227, 0.15);
+      --text: #0a1214;
+      --text2: #4a7a82;
       --text-inv: #ffffff;
       --radius: 14px;
-      --toggle-bg: #e8e5df;
-      --toggle-knob: #0d9668;
+      --toggle-bg: #e0f2f4;
+      --toggle-knob: #1AB8CC;
       --noise-opacity: 0.015;
-      --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-      --gradient-top: rgba(13, 150, 104, 0.04);
+      --card-shadow: 0 4px 24px rgba(33, 206, 227, 0.1);
+      --gradient-top: rgba(33, 206, 227, 0.06);
     }
 
     * {
@@ -100,27 +100,37 @@
     .logo {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .logo-icon {
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent), #3b82f6);
-      border-radius: 10px;
+      width: 42px;
+      height: 42px;
+      background: var(--accent);
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 18px;
+      padding: 6px;
+    }
+
+    .logo-icon svg {
+      width: 100%;
+      height: 100%;
+      fill: white;
     }
 
     .logo-text {
-      font-family: 'Playfair Display', serif;
-      font-size: 22px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 24px;
       font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), #93c5fd);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    .logo-text span {
+      color: var(--text2);
+      font-weight: 500;
     }
 
     .theme-toggle {
@@ -183,7 +193,7 @@
     textarea {
       width: 100%;
       background: var(--surface);
-      border: 1px solid var(--surface2);
+      border: 2px solid var(--surface2);
       border-radius: var(--radius);
       color: var(--text);
       font-family: 'DM Sans', sans-serif;
@@ -196,7 +206,7 @@
     input[type="text"]:focus,
     textarea:focus {
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
+      box-shadow: 0 0 0 4px var(--accent-glow);
     }
 
     input::placeholder,
@@ -228,7 +238,7 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      background: var(--accent);
       color: var(--text-inv);
       font-weight: 700;
       font-size: 15px;
@@ -238,11 +248,12 @@
       cursor: pointer;
       width: 100%;
       margin-top: 24px;
-      transition: transform 0.15s, box-shadow 0.15s;
+      transition: transform 0.15s, box-shadow 0.15s, background 0.2s;
     }
 
     .btn:hover {
-      transform: translateY(-1px);
+      background: var(--accent2);
+      transform: translateY(-2px);
       box-shadow: 0 8px 24px var(--accent-glow);
     }
 
@@ -404,12 +415,8 @@
     }
 
     .wa-preview-text .wa-link {
-      color: #93c5fd;
+      color: var(--accent);
       text-decoration: underline;
-    }
-
-    [data-theme="light"] .wa-preview-text .wa-link {
-      color: #2563eb;
     }
 
     /* Read Mode */
@@ -602,6 +609,7 @@
       color: var(--accent);
       text-decoration: none;
       cursor: pointer;
+      font-weight: 600;
     }
 
     .compose-view {
@@ -654,8 +662,17 @@
     <div class="compose-view" id="composeView">
       <div class="header-row">
         <div class="logo">
-          <div class="logo-icon">💧</div>
-          <div class="logo-text">MsgDrop</div>
+          <div class="logo-icon">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 8 L50 55 L78 55 Q80 30 62 15 Q52 8 50 8Z" fill="white"/>
+              <rect x="48" y="2" width="4" height="56" fill="white" rx="2"/>
+              <path d="M12 58 Q8 58 12 64 L22 68 L78 68 L88 64 Q92 58 88 58 L12 58Z" fill="white"/>
+              <path d="M12 58 Q5 54 10 45 Q12 50 16 55" fill="white"/>
+              <path d="M2 78 Q14 72 26 78 Q38 84 50 78 Q62 72 74 78 Q86 84 98 78" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <path d="M2 90 Q14 84 26 90 Q38 96 50 90 Q62 84 74 90 Q86 96 98 90" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="logo-text">ULISSY <span>Drop</span></div>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
           <span class="toggle-icons"><span>🌙</span><span>☀️</span></span>
@@ -704,8 +721,17 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
     <div class="read-view" id="readView">
       <div class="header-row" style="margin-bottom:24px">
         <div class="logo">
-          <div class="logo-icon">💧</div>
-          <div class="logo-text">MsgDrop</div>
+          <div class="logo-icon">
+            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50 8 L50 55 L78 55 Q80 30 62 15 Q52 8 50 8Z" fill="white"/>
+              <rect x="48" y="2" width="4" height="56" fill="white" rx="2"/>
+              <path d="M12 58 Q8 58 12 64 L22 68 L78 68 L88 64 Q92 58 88 58 L12 58Z" fill="white"/>
+              <path d="M12 58 Q5 54 10 45 Q12 50 16 55" fill="white"/>
+              <path d="M2 78 Q14 72 26 78 Q38 84 50 78 Q62 72 74 78 Q86 84 98 78" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <path d="M2 90 Q14 84 26 90 Q38 96 50 90 Q62 84 74 90 Q86 96 98 90" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="logo-text">ULISSY <span>Drop</span></div>
         </div>
         <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
           <span class="toggle-icons"><span>🌙</span><span>☀️</span></span>
@@ -732,7 +758,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
           </button>
           <span class="like-count" id="likeCount"></span>
         </div>
-        <div class="read-footer">Shared via <a onclick="goCompose()">MsgDrop</a> — send long messages as links</div>
+        <div class="read-footer">Shared via <a onclick="goCompose()">Ulissy Drop</a> — send long messages as links</div>
       </div>
     </div>
 
@@ -775,15 +801,21 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
 
     // ─── URL Shortener ──────────────────────────────────
     async function shortenUrl(longUrl) {
+      // Try Ulissy Short first, then fallback to public services
       var services = [
-        'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl),
-        'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl)
+        { url: 'https://s.ulissy.app/api/shorten', method: 'POST', body: JSON.stringify({ url: longUrl }), headers: { 'Content-Type': 'application/json' }, parse: (d) => d.url || ('https://s.ulissy.app/' + d.code) },
+        { url: 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl), method: 'GET', parse: (d) => d.shorturl },
+        { url: 'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl), method: 'GET', parse: (d) => d.shorturl }
       ];
       for (var i = 0; i < services.length; i++) {
         try {
-          var res = await fetch(services[i]);
+          var opts = { method: services[i].method };
+          if (services[i].body) opts.body = services[i].body;
+          if (services[i].headers) opts.headers = services[i].headers;
+          var res = await fetch(services[i].url, opts);
           var data = await res.json();
-          if (data.shorturl) return data.shorturl;
+          var short = services[i].parse(data);
+          if (short) return short;
         } catch (e) { continue; }
       }
       return null;
@@ -834,25 +866,25 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
     }
 
     function shortenerFailed() {
-      document.getElementById('shortUrl').textContent = 'Shortener unavailable \u2014 use full link';
+      document.getElementById('shortUrl').textContent = 'Shortener unavailable — use full link';
       document.getElementById('shortUrl').className = 'url short-error';
-      document.getElementById('copyBtn').textContent = '\uD83D\uDCCB Copy Full Link';
+      document.getElementById('copyBtn').textContent = '📋 Copy Full Link';
     }
 
     function updateWaPreview(title, body, url) {
       var displayTitle = title || 'Message';
-      var preview = body.length > 140 ? body.substring(0, 140) + '\u2026' : body;
+      var preview = body.length > 140 ? body.substring(0, 140) + '…' : body;
       document.getElementById('waPreview').innerHTML =
-        '\uD83D\uDCE9 <strong>' + renderText(displayTitle) + '</strong>\n\n' +
+        '📩 <strong>' + renderText(displayTitle) + '</strong>\n\n' +
         renderText(preview) + '\n\n' +
-        '\uD83D\uDC49 <span class="wa-link">' + url + '</span>';
+        '👉 <span class="wa-link">' + url + '</span>';
     }
 
     function copyLink() {
       navigator.clipboard.writeText(shareUrl).then(function () {
         var btn = document.getElementById('copyBtn');
         var orig = btn.textContent;
-        btn.textContent = '\u2713 Copied!';
+        btn.textContent = '✓ Copied!';
         setTimeout(function () { btn.textContent = orig; }, 1500);
       });
     }
@@ -860,8 +892,8 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
     function shareWhatsApp() {
       var title = document.getElementById('msgTitle').value.trim() || 'Message';
       var body = msgBody.value.trim();
-      var preview = body.length > 140 ? body.substring(0, 140) + '\u2026' : body;
-      var text = '\uD83D\uDCE9 *' + title + '*\n\n' + preview + '\n\n\uD83D\uDC49 ' + shareUrl;
+      var preview = body.length > 140 ? body.substring(0, 140) + '…' : body;
+      var text = '📩 *' + title + '*\n\n' + preview + '\n\n👉 ' + shareUrl;
       window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
     }
 
@@ -916,7 +948,6 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
         }
       }
 
-      // CJK disambiguation
       var kanaMatches = s.match(/[\u3040-\u309f\u30a0-\u30ff]/g);
       var hanMatches = s.match(/[\u4e00-\u9fff]/g);
       var kanaCount = kanaMatches ? kanaMatches.length : 0;
@@ -930,9 +961,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
         bestScore = hanCount;
       }
 
-      var result = bestScore >= 2 ? best : 'en-US';
-      console.log('[TTS] Lang: ' + result + ' (score: ' + bestScore + ')');
-      return result;
+      return bestScore >= 2 ? best : 'en-US';
     }
 
     function getBestVoice(lang) {
@@ -946,28 +975,19 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       });
 
       if (langVoices.length > 0) {
-        // Score each voice by quality indicators
         var scored = langVoices.map(function (v) {
-          var name = (v.name || '').toLowerCase();
           var score = 0;
-          // Premium/neural indicators (highest priority)
           if (/enhanced|premium|natural|neural/i.test(v.name)) score += 100;
-          // Cloud voices (Google, Microsoft, Apple) tend to be better
           if (/google|microsoft|siri/i.test(v.name)) score += 80;
-          // Remote/cloud voices are usually higher quality
           if (!v.localService) score += 50;
-          // Apple "Enhanced" or named voices (like "Luca", "Alice") are good on iOS/macOS
           if (/enhanced/i.test(v.name)) score += 40;
-          // Penalize compact/basic voices
           if (/compact|basic/i.test(v.name)) score -= 50;
           return { voice: v, score: score };
         });
         scored.sort(function (a, b) { return b.score - a.score; });
-        console.log('[TTS] Available voices for ' + lang + ':', scored.map(function(s) { return s.voice.name + ' (' + s.score + ')'; }).join(', '));
         return scored[0].voice;
       }
 
-      // Fallback: try English with same quality ranking
       if (prefix !== 'en') {
         var enVoices = voices.filter(function (v) {
           var vl = (v.lang || '').replace('_', '-').toLowerCase();
@@ -1002,9 +1022,6 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       }
 
       if (!ttsText) return;
-
-      // CRITICAL: Chrome requires speak() to be called synchronously
-      // from a user gesture (click). Do NOT defer to onvoiceschanged.
       startSpeaking();
     }
 
@@ -1013,10 +1030,8 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       var lang = detectLanguage(ttsText);
       var voice = getBestVoice(lang);
 
-      // Chrome cuts off speech after ~15s. Split into sentence chunks.
       var chunks = ttsText.match(/[^.!?。！？\n]+[.!?。！？\n]*/g) || [ttsText];
 
-      // Merge small chunks to avoid choppy speech
       var merged = [];
       var current = '';
       for (var i = 0; i < chunks.length; i++) {
@@ -1060,9 +1075,6 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
             document.getElementById('ttsProgress').style.display = 'block';
             updateTTSUI();
             updateProgress(startTime, estimatedDuration);
-            if (voice) {
-              console.log('[TTS] Using voice:', voice.name, '(' + voice.lang + ')');
-            }
           }
         };
 
@@ -1071,8 +1083,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
           if (ttsPlaying) speakNext();
         };
 
-        utterance.onerror = function (e) {
-          console.warn('[TTS] Error on chunk', chunkIndex, e.error);
+        utterance.onerror = function () {
           ttsPlaying = false;
           updateTTSUI();
         };
@@ -1097,11 +1108,11 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       var label = document.getElementById('listenLabel');
       if (ttsPlaying) {
         btn.classList.add('playing');
-        icon.textContent = '\u23F9';
+        icon.textContent = '⏹';
         label.textContent = 'Stop';
       } else {
         btn.classList.remove('playing');
-        icon.textContent = '\uD83D\uDD0A';
+        icon.textContent = '🔊';
         label.textContent = 'Listen';
       }
     }
@@ -1109,7 +1120,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
     function cycleSpeed() {
       speedIndex = (speedIndex + 1) % speeds.length;
       ttsSpeed = speeds[speedIndex];
-      document.getElementById('speedBtn').textContent = ttsSpeed + '\u00D7';
+      document.getElementById('speedBtn').textContent = ttsSpeed + '×';
       if (ttsPlaying) {
         speechSynthesis.cancel();
         ttsPlaying = false;
@@ -1117,23 +1128,19 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       }
     }
 
-    // Preload voices aggressively on page load
     (function preloadVoices() {
       speechSynthesis.getVoices();
       if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = function () {
-          var v = speechSynthesis.getVoices();
-          console.log('[TTS] Voices preloaded:', v.length);
+          speechSynthesis.getVoices();
         };
       }
-      // Chrome sometimes needs multiple nudges
       setTimeout(function () { speechSynthesis.getVoices(); }, 100);
       setTimeout(function () { speechSynthesis.getVoices(); }, 500);
     })();
 
     // ─── Likes ──────────────────────────────────────────
-    // Railway API for shared like counts
-    var LIKES_API = 'https://msgdrop-production.up.railway.app';
+    var LIKES_API = ''; // Optional: add your Railway likes API
 
     var currentMsgHash = '';
 
@@ -1185,7 +1192,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
       if (liked) {
         setLikedLocally(currentMsgHash, false);
         btn.classList.remove('liked', 'heart-pop');
-        heart.textContent = '\uD83E\uDD0D';
+        heart.textContent = '🤍';
         label.textContent = 'Like';
         sendLikeDelta(currentMsgHash, -1);
         updateLikeDisplay(-1);
@@ -1194,7 +1201,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
         btn.classList.remove('heart-pop');
         void btn.offsetWidth;
         btn.classList.add('liked', 'heart-pop');
-        heart.textContent = '\u2764\uFE0F';
+        heart.textContent = '❤️';
         label.textContent = 'Liked';
         sendLikeDelta(currentMsgHash, 1);
         updateLikeDisplay(1);
@@ -1222,7 +1229,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
 
       if (liked) {
         btn.classList.add('liked');
-        heart.textContent = '\u2764\uFE0F';
+        heart.textContent = '❤️';
         label.textContent = 'Liked';
       }
 
@@ -1251,14 +1258,14 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
           date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
       }
 
-      document.title = data.t + ' \u2014 MsgDrop';
+      document.title = data.t + ' — Ulissy Drop';
     }
 
     function goCompose() {
       history.pushState(null, '', window.location.pathname);
       document.getElementById('composeView').style.display = 'block';
       document.getElementById('readView').style.display = 'none';
-      document.title = 'MsgDrop \u2014 Long Messages, One Tap';
+      document.title = 'Ulissy Drop — Long Messages, One Tap';
     }
 
     // ─── Init ───────────────────────────────────────────
