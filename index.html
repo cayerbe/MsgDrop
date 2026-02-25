@@ -824,7 +824,7 @@ Supports **bold** text and line breaks. Your reader gets automatic voice playbac
     async function shortenUrl(longUrl) {
       // Try Ulissy Short first, then fallback to public services
       var services = [
-        { url: 'https://s.ulissy.app/api/shorten', method: 'POST', body: JSON.stringify({ url: longUrl }), headers: { 'Content-Type': 'application/json' }, parse: (d) => d.url || ('https://s.ulissy.app/' + d.code) },
+        { url: 'https://s.ulissy.app/api/shorten', method: 'POST', body: JSON.stringify({ url: longUrl }), headers: { 'Content-Type': 'application/json' }, parse: (d) => d.code ? ('https://s.ulissy.app/' + d.code) : null },
         { url: 'https://is.gd/create.php?format=json&url=' + encodeURIComponent(longUrl), method: 'GET', parse: (d) => d.shorturl },
         { url: 'https://v.gd/create.php?format=json&url=' + encodeURIComponent(longUrl), method: 'GET', parse: (d) => d.shorturl }
       ];
